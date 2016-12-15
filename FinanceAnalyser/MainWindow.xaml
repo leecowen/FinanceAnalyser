@@ -5,8 +5,76 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FinanceAnalyser"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Finance Analyser" Height="768" Width="1024">
     <Grid>
-        
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#FF244976" Offset="0"/>
+                <GradientStop Color="#FF7AA1D1" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <StackPanel x:Name="Phase1StackPanel" Visibility="Visible">
+            <Label Content="Use the button below to import your financial transactions for analysis." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+            <Button x:Name="btnImport" Content="Import" Height="67" Width="200" Margin="0,20,0,50" Click="btnImport_Click" />
+
+            <!--<DataGrid Name="dgData" AutoGenerateColumns="False" Visibility="Hidden">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Row" Binding="{Binding Row}" />
+                </DataGrid.Columns>
+                <DataGrid.RowDetailsTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Details}" Margin="10" />
+                    </DataTemplate>
+                </DataGrid.RowDetailsTemplate>
+            </DataGrid>-->
+        </StackPanel>
+
+        <ListView x:Name="ListViewTransactions" Margin="0,0,0,80" Visibility="Collapsed">
+            <ListView.View>
+                <GridView ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <GridViewColumn Header="Date" Width="100" DisplayMemberBinding="{Binding Path=Date}"/>
+                    <GridViewColumn Header="Type" Width="200" DisplayMemberBinding="{Binding Path=Type}"/>
+                    <GridViewColumn Header="Description" Width="300" DisplayMemberBinding="{Binding Path=Description}"/>
+                    <GridViewColumn Header="Debit" Width="100" DisplayMemberBinding="{Binding Path=Debit}"/>
+                    <GridViewColumn Header="Credit" Width="100" DisplayMemberBinding="{Binding Path=Credit}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <StackPanel x:Name="Phase2StackPanel" Orientation="Horizontal" HorizontalAlignment="Center" Visibility="Collapsed">
+            <Button x:Name="btnAnalyse" Content="Analyse!" Height="67" Width="200" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="btnAnalyse_Click" IsEnabled="False" />
+            <Button x:Name="btnCatagorise" Content="Catagorise!" Height="67" Width="200" Margin="50,0,0,10" VerticalAlignment="Bottom" Click="btnCatagorise_Click" />
+        </StackPanel>
+
+        <!--<StackPanel x:Name="Phase3StackPanel" Visibility="Visible" Margin="30,30,30,30">-->
+        <!--<Label Content="Here are a list transactions which have not yet been catagorised. Please select a catagory from the list or enter your own." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Center" />-->
+        <TextBlock x:Name="Phase3TextBlock" Text="Here are a list transactions which have not yet been catagorised. Please select a catagory from the list or enter your own." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="100,0,100,0" Visibility="Collapsed" />
+
+        <StackPanel x:Name="Phase3StackPanel" Margin="50,100,50,0" HorizontalAlignment="Center" Visibility="Collapsed" >
+            <TextBlock x:Name="Phase3UnknownTransTotal" Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" Margin="0,-50,0,0" />
+            <TextBlock x:Name="Phase3DescLabel" Text="Press the button to start catagorising." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" Width="600"/>            <Button x:Name="btnOrganisingTime" Content="Organising time!" Width="200" Height="100" FontSize="20" Margin="0,30,0,0" Click="btnOrganisingTime_Click" />
+
+        </StackPanel>
+
+        <StackPanel x:Name="Phase4StackPanel" Orientation="Vertical" Width="800" Margin="50,50,50,0" HorizontalAlignment="Center" Visibility="Collapsed">
+            <TextBlock x:Name="Phase4Date" Text="**Transaction Date**" Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" />
+            <TextBlock x:Name="Phase4Type" Text="**Transaction Type**" Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" />
+            <TextBlock x:Name="Phase4Description" Text="**Transaction description**" Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" />
+            <TextBlock x:Name="Phase4Debit" Text="**Transaction Debit amount**" Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" />
+            <TextBlock x:Name="Phase4Credit" Text="**Transaction Credit amount**" Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" />
+            <TextBox x:Name="CategoryInputBox" Text="Please enter a category" Height="30" Margin="0,30,0,0" Width="300" />
+            <Button x:Name="Phase4SubmitButton" Content="Submit" Click="SubmitCategory_Click" Margin="0,30,0,0" />
+        </StackPanel>
+
+        <ListView x:Name="Phase5ListView" Margin="0,0,0,80" Visibility="Collapsed" >
+            <ListView.View>
+                <GridView ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <GridViewColumn Header="Category" Width="200" DisplayMemberBinding="{Binding Path=Key}"/>
+                    <GridViewColumn Header="Total" Width="100" DisplayMemberBinding="{Binding Path=Value}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
     </Grid>
 </Window>
