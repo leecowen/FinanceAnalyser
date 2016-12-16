@@ -16,8 +16,8 @@ namespace FinanceAnalyser
     {
         List<Transaction> Transactions = new List<Transaction>();
         // SERIALISE THIS SHIT
-        Dictionary<string, string> MatchedCatagories = new Dictionary<string, string>();
-        Dictionary<string, string> NewMatchedCatagories = new Dictionary<string, string>();
+        Dictionary<string, string> MatchedCategories = new Dictionary<string, string>();
+        Dictionary<string, string> NewMatchedCategories = new Dictionary<string, string>();
         Transaction currentTransaction = null;
         SQLiteConnection dbConnection = new SQLiteConnection();
 
@@ -30,7 +30,7 @@ namespace FinanceAnalyser
 
             //Connect to sqlite database
             dbConnection = DatabaseConnector.InitializeDatabase();
-            MatchedCatagories = DatabaseConnector.LoadSavedCategories(dbConnection);
+            MatchedCategories = DatabaseConnector.LoadSavedCategories(dbConnection);
 
             // Hook to the application close event. No longer needed as we don't need to unhook from Excel anymore?
             //Application.Current.MainWindow.Closing += new System.ComponentModel.CancelEventHandler(AppClosing);
@@ -99,14 +99,14 @@ namespace FinanceAnalyser
             {
                 string categoryName;
 
-                if (MatchedCatagories.TryGetValue(transaction.Description, out categoryName))
+                if (MatchedCategories.TryGetValue(transaction.Description, out categoryName))
                 {
                     transaction.Category = categoryName;
                 }
             }
         }
 
-        private void btnCatagorise_Click(object sender, RoutedEventArgs e)
+        private void btnCategorise_Click(object sender, RoutedEventArgs e)
         {
             ListViewTransactions.Visibility = Visibility.Collapsed;
             Phase2StackPanel.Visibility = Visibility.Collapsed;
@@ -131,7 +131,8 @@ namespace FinanceAnalyser
 
         private void AskForCategory()
         {
-            int remaining = Transactions.Count(t => string.IsNullOrEmpty(t.Category));
+            int remaining = Transactions.Distinct().Count(t => string.IsNullOrEmpty(t.Category));
+            int remaining2 = Transactions.Where(t => string.IsNullOrEmpty(t.Category)).Select(t => t.Description).Distinct().Count();
 
             currentTransaction = Transactions.FirstOrDefault(t => string.IsNullOrEmpty(t.Category));
             if (currentTransaction == null)
@@ -142,7 +143,7 @@ namespace FinanceAnalyser
 
                 Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
 
-                foreach (var category in MatchedCatagories.Values.Distinct())
+                foreach (var category in MatchedCategories.Values.Distinct())
                 {
                     //Totals the values associated with each category     
                     categoryTotals.Add(category, Transactions.Where(t => t.Category == category).Sum(t => t.Amount));
@@ -152,7 +153,7 @@ namespace FinanceAnalyser
                 Phase5SaveButton.Visibility = Visibility.Visible;
                 return;
             }
-            Phase4Remaining.Text = "Unknown transactions remaining: " + remaining;
+            Phase4Remaining.Text = "Unknown transactions remaining: " + remaining2;
             Phase4Date.Text = "Date: " + currentTransaction.Date;
             Phase4Type.Text = "Type: " + currentTransaction.Type;
             Phase4Description.Text = "Description: " + currentTransaction.Description;
@@ -166,8 +167,8 @@ namespace FinanceAnalyser
 
             string currentDescription = currentTransaction.Description;
 
-            MatchedCatagories.Add(currentDescription, submittedCategory);
-            NewMatchedCatagories.Add(currentDescription, submittedCategory);
+            MatchedCategories.Add(currentDescription, submittedCategory);
+            NewMatchedCategories.Add(currentDescription, submittedCategory);
             
             Categorise();
             AskForCategory();
@@ -180,7 +181,12 @@ namespace FinanceAnalyser
         /// <param name="e"></param>
         private void Phase5SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            DatabaseConnector.SaveCategories(NewMatchedCatagories, dbConnection);
+            DatabaseConnector.SaveCategories(NewMatchedCategories, dbConnection);
+        }
+
+        private void Phase4SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            DatabaseConnector.SaveCategories(NewMatchedCategories, dbConnection);
         }
     }
 }

@@ -72,14 +72,14 @@ namespace FinanceAnalyser.Classes
             });
         }
 
-        public static bool GetCSVCatagories()
+        public static bool GetCSVCategories()
         {
 
 
             return false;
         }
 
-        public static bool WriteCSVCatagories()
+        public static bool WriteCSVCategories()
         {
 
 

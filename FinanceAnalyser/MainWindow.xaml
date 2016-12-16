@@ -44,16 +44,16 @@
 
         <StackPanel x:Name="Phase2StackPanel" Orientation="Horizontal" HorizontalAlignment="Center" Visibility="Collapsed">
             <Button x:Name="btnAnalyse" Content="Analyse!" Height="67" Width="200" Margin="0,0,0,10" VerticalAlignment="Bottom" Click="btnAnalyse_Click" IsEnabled="False" />
-            <Button x:Name="btnCatagorise" Content="Catagorise!" Height="67" Width="200" Margin="50,0,0,10" VerticalAlignment="Bottom" Click="btnCatagorise_Click" />
+            <Button x:Name="btnCategorise" Content="Categorise!" Height="67" Width="200" Margin="50,0,0,10" VerticalAlignment="Bottom" Click="btnCategorise_Click" />
         </StackPanel>
 
         <!--<StackPanel x:Name="Phase3StackPanel" Visibility="Visible" Margin="30,30,30,30">-->
-        <!--<Label Content="Here are a list transactions which have not yet been catagorised. Please select a catagory from the list or enter your own." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Center" />-->
-        <TextBlock x:Name="Phase3TextBlock" Text="Here are a list transactions which have not yet been catagorised. Please select a catagory from the list or enter your own." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="100,0,100,0" Visibility="Collapsed" />
+        <!--<Label Content="Here are a list transactions which have not yet been categorised. Please select a category from the list or enter your own." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Center" />-->
+        <TextBlock x:Name="Phase3TextBlock" Text="Here are a list transactions which have not yet been categorised. Please select a category from the list or enter your own." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="100,0,100,0" Visibility="Collapsed" />
 
         <StackPanel x:Name="Phase3StackPanel" Margin="50,100,50,0" HorizontalAlignment="Center" Visibility="Collapsed" >
             <TextBlock x:Name="Phase3UnknownTransTotal" Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" Margin="0,-50,0,0" />
-            <TextBlock x:Name="Phase3DescLabel" Text="Press the button to start catagorising." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" Width="600"/>
+            <TextBlock x:Name="Phase3DescLabel" Text="Press the button to start categorising." Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" Width="600"/>
             <Button x:Name="btnOrganisingTime" Content="Organising time!" Width="200" Height="100" FontSize="20" Margin="0,30,0,0" Click="btnOrganisingTime_Click" />
         </StackPanel>
 
@@ -66,6 +66,7 @@
             <TextBlock x:Name="Phase4Credit" Text="**Transaction Credit amount**" Foreground="White" FontSize="20" FontFamily="Segoe UI Light" TextWrapping="Wrap" TextAlignment="Center" />
             <TextBox x:Name="CategoryInputBox" Text="Please enter a category" Height="30" Margin="0,30,0,0" Width="300" />
             <Button x:Name="Phase4SubmitButton" Content="Submit" Click="SubmitCategory_Click" Margin="0,30,0,0" />
+            <Button x:Name="Phase4SaveButton" Content="Save Categories" Width="200" Height="80" VerticalAlignment="Bottom" Margin="0,0,0,20" Visibility="Collapsed" Click="Phase4SaveButton_Click"/>
         </StackPanel>
 
         <ListView x:Name="Phase5ListView" Margin="0,0,0,200" Visibility="Collapsed" >
