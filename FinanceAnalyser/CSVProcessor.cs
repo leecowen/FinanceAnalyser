@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace FinanceAnalyser.Classes
+namespace FinanceAnalyser
 {
     public static class CSVProcessor
     {
@@ -32,7 +30,7 @@ namespace FinanceAnalyser.Classes
                 var balance = data[7];
 
                 //Convert results to correct type
-                string dateFormatted = Convert.ToDateTime(date).ToShortDateString();
+                DateTime dateFormatted = Convert.ToDateTime(date);
                 string typeFormatted = Convert.ToString(type);
                 string descriptionFormatted = Convert.ToString(description);
                 decimal debitFormatted;

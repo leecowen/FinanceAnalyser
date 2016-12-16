@@ -1,11 +1,9 @@
-﻿using FinanceAnalyser.Classes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
+using System.Data.SQLite;
 using System.Linq;
 using System.Windows;
-using System.Data.SQLite;
 using System.Windows.Input;
 
 namespace FinanceAnalyser
@@ -143,10 +141,15 @@ namespace FinanceAnalyser
 
                 Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
 
+
+                //// THIS IS WHERE WE WANT TO SPLIT CATEGORYTOTALS BY MONTH RATHER THAN JUST A LUMP SUM
+                var months = Transactions.GroupBy(t => t.Date.Month);
+
                 foreach (var category in MatchedCategories.Values.Distinct())
                 {
                     //Totals the values associated with each category     
-                    categoryTotals.Add(category, Transactions.Where(t => t.Category == category).Sum(t => t.Amount));
+                    categoryTotals.Add(category, Transactions.Where(t => t.Category == category).Sum(t => t.Amount));                    
+
                 }
 
                 Phase5ListView.ItemsSource = categoryTotals;

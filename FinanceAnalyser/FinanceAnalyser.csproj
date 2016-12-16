@@ -87,10 +87,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Classes\CSVProcessor.cs" />
-    <Compile Include="Classes\DatabaseConnector.cs" />
-    <Compile Include="Classes\DefinedTransactionRules.cs" />
-    <Compile Include="Classes\Transaction.cs" />
+    <Compile Include="CSVProcessor.cs" />
+    <Compile Include="DatabaseConnector.cs" />
+    <Compile Include="DefinedTransactionRules.cs" />
+    <Compile Include="Transaction.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

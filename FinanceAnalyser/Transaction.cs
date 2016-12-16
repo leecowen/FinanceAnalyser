@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace FinanceAnalyser.Classes
+namespace FinanceAnalyser
 {
     public class Transaction
     {
-        public string Date { get; set; }
+        public DateTime Date { get; set; }
         public string Type { get; set; }
         public string Description { get; set; }
         public decimal Debit { get; set; }
@@ -17,7 +13,7 @@ namespace FinanceAnalyser.Classes
         public decimal Balance { get; set; }
         public string Category { get; set; }
 
-        public Transaction(string date, string type, string description, decimal debit, decimal credit, decimal balance)
+        public Transaction(DateTime date, string type, string description, decimal debit, decimal credit, decimal balance)
         {
             Date = date;
             Type = type;
