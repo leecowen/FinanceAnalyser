@@ -9,7 +9,7 @@ namespace FinanceAnalyser.Classes
 {
     public static class CSVProcessor
     {
-        public static IEnumerable<Transaction> GetCSV(string filepath)
+        public static IEnumerable<Transaction> GetCSVTransactions(string filepath)
         {
             // We change file extension here to make sure it's a .csv file.
             // TODO: Error checking.
@@ -70,6 +70,20 @@ namespace FinanceAnalyser.Classes
                 //Return formatted transaction
                 return currentTransaction;
             });
+        }
+
+        public static bool GetCSVCatagories()
+        {
+
+
+            return false;
+        }
+
+        public static bool WriteCSVCatagories()
+        {
+
+
+            return false;
         }
     }
 }

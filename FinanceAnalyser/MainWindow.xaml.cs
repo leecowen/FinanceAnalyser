@@ -5,6 +5,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Data.SQLite;
 
 namespace FinanceAnalyser
 {
@@ -17,6 +18,7 @@ namespace FinanceAnalyser
         // SERIALISE THIS SHIT
         Dictionary<string, string> MatchedCatagories = new Dictionary<string, string>();
         Transaction currentTransaction = null;
+        SQLiteConnection dbConnection = new SQLiteConnection();
 
         /// <summary>
         /// App launch. Register a handler for when the app closes so we can neatly exit from Excel
@@ -24,6 +26,11 @@ namespace FinanceAnalyser
         public MainWindow()
         {
             InitializeComponent();
+
+            //Connect to sqlite database
+            dbConnection = DatabaseConnector.InitializeDatabase();
+            MatchedCatagories = DatabaseConnector.LoadSavedCategories(dbConnection);
+
             // Hook to the application close event. No longer needed as we don't need to unhook from Excel anymore?
             //Application.Current.MainWindow.Closing += new System.ComponentModel.CancelEventHandler(AppClosing);
         }
@@ -38,7 +45,7 @@ namespace FinanceAnalyser
             //Prompts the user to select the file containing data
             string filepath = this.GetFilepath();
 
-            Transactions = CSVProcessor.GetCSV(filepath).ToList();
+            Transactions = CSVProcessor.GetCSVTransactions(filepath).ToList();
             ListViewTransactions.ItemsSource = Transactions;
 
             //Make things visible!
@@ -109,7 +116,7 @@ namespace FinanceAnalyser
 
             Phase3TextBlock.Visibility = Visibility.Collapsed;
             Phase3StackPanel.Visibility = Visibility.Visible;
-            Phase3UnknownTransTotal.Text = "Total unique unrecognised transactions: " + Transactions.Where(t => string.IsNullOrEmpty(t.Category)).Select(t => t.Description).Distinct().Count() + ". Better start organising!";
+            //Phase3UnknownTransTotal.Text = "Total unique unrecognised transactions: " + Transactions.Where(t => string.IsNullOrEmpty(t.Category)).Select(t => t.Description).Distinct().Count() + ". Better start organising!";
         }
 
         private void btnOrganisingTime_Click(object sender, RoutedEventArgs e)
@@ -123,25 +130,28 @@ namespace FinanceAnalyser
 
         private void AskForCategory()
         {
+            int remaining = Transactions.Count(t => string.IsNullOrEmpty(t.Category));
+
             currentTransaction = Transactions.FirstOrDefault(t => string.IsNullOrEmpty(t.Category));
             if (currentTransaction == null)
-            {                
+            {
+                //Phase 5                           
                 Phase4SubmitButton.IsEnabled = false;
                 Phase5ListView.Visibility = Visibility.Visible;
                 
-
                 Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
-
-                ////THIS IS PHASE5 SHITZ
+                
                 foreach (var category in MatchedCatagories.Values.Distinct())
                 {
+                    //Totals the values associated with each category     
                     categoryTotals.Add(category, Transactions.Where(t => t.Category == category).Sum(t => t.Amount));
                 }
 
                 Phase5ListView.ItemsSource = categoryTotals;
+                Phase5SaveButton.Visibility = Visibility.Visible;
                 return;
             }
-
+            Phase4Remaining.Text = "Unknown transactions remaining: " + remaining;
             Phase4Date.Text = "Date: " + currentTransaction.Date;
             Phase4Type.Text = "Type: " + currentTransaction.Type;
             Phase4Description.Text = "Description: " + currentTransaction.Description;
@@ -154,10 +164,20 @@ namespace FinanceAnalyser
             string submittedCategory = CategoryInputBox.Text;
 
             string currentDescription = currentTransaction.Description;
-            MatchedCatagories.Add(currentDescription, submittedCategory);
+            MatchedCatagories.Add(currentDescription, submittedCategory);            
 
             Categorise();
             AskForCategory();
+        }
+        
+        /// <summary>
+        /// Take MatchedCategories and save it in the database
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Phase5SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            DatabaseConnector.SaveCategories(MatchedCatagories, dbConnection);
         }
     }
 }
