@@ -90,6 +90,7 @@
     <Compile Include="CSVProcessor.cs" />
     <Compile Include="DatabaseConnector.cs" />
     <Compile Include="DefinedTransactionRules.cs" />
+    <Compile Include="OpenFilePicker.cs" />
     <Compile Include="Transaction.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

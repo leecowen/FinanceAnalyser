@@ -25,9 +25,14 @@ namespace FinanceAnalyser
         public MainWindow()
         {
             InitializeComponent();
+            ConnectToDatabase();            
+        }
 
-            //Connect to sqlite database
-            // If anything breaks in here, it causes a gross XAML crash. Need to move it out of MainWindow Constructor.
+        /// <summary>
+        /// Connect to the SQLite database
+        /// </summary>
+        private void ConnectToDatabase()
+        {
             dbConnection = DatabaseConnector.InitializeDatabase();
             MatchedCategories = DatabaseConnector.LoadSavedCategories(dbConnection);
         }
@@ -37,15 +42,15 @@ namespace FinanceAnalyser
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void btnImport_Click(object sender, RoutedEventArgs e)
+        private void ImportCSVFile_Click(object sender, RoutedEventArgs e)
         {
             //Prompts the user to select the file containing data
-            string filepath = this.GetFilepath();
+            string filepath = OpenFilePicker.GetFilepath();
 
             // Pulls all transactions from the CSV file and formats
             Transactions = CSVProcessor.GetCSVTransactions(filepath).ToList();
 
-            // Apply categories to descriptions which meet hardcoded rules
+            // Apply categories to descriptions which meet predefined rules
             List<Transaction> TransactionsTest = new List<Transaction>();
 
             //Make things visible!
@@ -53,44 +58,6 @@ namespace FinanceAnalyser
             Phase1StackPanel.Visibility = Visibility.Collapsed;
             ListViewTransactions.Visibility = Visibility.Visible;
             Phase2StackPanel.Visibility = Visibility.Visible;
-        }
-
-        /// <summary>
-        /// Gets the filepath of the file the user selected
-        /// </summary>
-        /// <returns></returns>
-        private string GetFilepath()
-        {
-            // Create the OpenFIleDialog object
-            Microsoft.Win32.OpenFileDialog openPicker = new Microsoft.Win32.OpenFileDialog();
-
-            // We are using excel files in this example
-            openPicker.DefaultExt = ".csv";
-            openPicker.Filter = "CSV files (*.csv)|*.csv|XML files (*.xml)|*.xml";
-
-            // Display the OpenFileDialog by calling ShowDialog method
-            Nullable<bool> result = openPicker.ShowDialog();
-
-            // Check to see if we have a result 
-            if (result == true)
-            {
-                return openPicker.FileName.ToString();
-            }
-            else
-            {
-                return null;
-            }
-
-        }
-
-        /// <summary>
-        /// Begins the analysis of the data
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnAnalyse_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("How did you even click this? The button is disabled");
         }
 
         /// <summary>
@@ -114,7 +81,7 @@ namespace FinanceAnalyser
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void btnCategorise_Click(object sender, RoutedEventArgs e)
+        private void Phase4StartCategorising_Click(object sender, RoutedEventArgs e)
         {
             // Hide the previous phase
             ListViewTransactions.Visibility = Visibility.Collapsed;
@@ -128,13 +95,13 @@ namespace FinanceAnalyser
             // Show the category sorting page
             Phase4StackPanel.Visibility = Visibility.Visible;
 
-            MoveToNextTransaction();
+            Phase4MoveToNextTransaction();
         }
 
         /// <summary>
         /// Takes the first transaction in the list and displays it to the user to categorise
         /// </summary>
-        private void MoveToNextTransaction()
+        private void Phase4MoveToNextTransaction()
         {
             // Keep count of the number of unique transaction descriptions which don't have a category
             int remaining = Transactions.Where(t => string.IsNullOrEmpty(t.Category)).Select(t => t.Description).Distinct().Count();
@@ -162,12 +129,12 @@ namespace FinanceAnalyser
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SubmitCategory_Click(object sender, RoutedEventArgs e)
+        private void SubmitCategory(object sender, RoutedEventArgs e)
         {
             string submittedCategory = CategoryInputBox.Text;
-
             string currentDescription = currentTransaction.Description;
 
+            // Add this new match to our list of matchedCategories
             MatchedCategories.Add(currentDescription, submittedCategory);
             NewMatchedCategories.Add(currentDescription, submittedCategory);
 
@@ -177,21 +144,21 @@ namespace FinanceAnalyser
 
             //Move to the next transaction
             CategoriseKnownTransactionDescriptions();
-            MoveToNextTransaction();
+            Phase4MoveToNextTransaction();
         }
 
         /// <summary>
-        /// Take NewMatchedCategories and save it to the database
+        /// User submitting a new category for a transaction description and used the 'Enter' key rather than clicking submit.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Phase5SaveButton_Click(object sender, RoutedEventArgs e)
+        private void Phase4SubmitCategoryEnterKey(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            DatabaseConnector.SaveCategories(NewMatchedCategories, dbConnection);
-            NewMatchedCategories.Clear();
-
-            Phase5SaveButton.Content = "Successfully saved";
-            Phase5SaveButton.IsEnabled = false;
+            if (e.Key == Key.Return)
+            {
+                SubmitCategory(sender, e);
+                CategoryInputBox.Clear();
+            }
         }
 
         /// <summary>
@@ -210,37 +177,24 @@ namespace FinanceAnalyser
             // Disable the save button and tell the user it was successful.
             Phase4SaveButton.Content = "Successfully saved";
             Phase4SaveButton.IsEnabled = false;
-        }
-
-        /// <summary>
-        /// User submitting a new category for a transaction description and used the 'Enter' key rather than clicking submit.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Phase4SubmitCategoryEnterKey(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == Key.Return)
-            {
-                SubmitCategory_Click(sender, e);
-                CategoryInputBox.Clear();
-            }
-        }
+        }        
 
         /// <summary>
         /// Phase 5 
         /// </summary>
         private void Phase5Start()
         {
+            // Hide the previous phase
             Phase4SubmitButton.IsEnabled = false;
             Phase4SaveButton.Visibility = Visibility.Collapsed;
             Phase5ListView.Visibility = Visibility.Visible;
 
-            Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
-
-
             //// THIS IS WHERE WE WANT TO SPLIT CATEGORYTOTALS BY MONTH RATHER THAN JUST A LUMP SUM
+
+            Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();            
             var months = Transactions.GroupBy(t => t.Date.Month);
 
+            // Sum the total amount for each category
             foreach (var category in MatchedCategories.Values.Distinct())
             {
                 //Totals the values associated with each category     
@@ -250,7 +204,6 @@ namespace FinanceAnalyser
 
             // Update the UI to show the results
             Phase5ListView.ItemsSource = categoryTotals;
-            Phase5SaveButton.Visibility = Visibility.Visible;
         }
     }
 }
