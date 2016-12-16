@@ -14,14 +14,13 @@ namespace FinanceAnalyser
     public partial class MainWindow : Window
     {
         List<Transaction> Transactions = new List<Transaction>();
-        // SERIALISE THIS SHIT
         Dictionary<string, string> MatchedCategories = new Dictionary<string, string>();
         Dictionary<string, string> NewMatchedCategories = new Dictionary<string, string>();
         Transaction currentTransaction = null;
         SQLiteConnection dbConnection = new SQLiteConnection();
 
         /// <summary>
-        /// App launch. Register a handler for when the app closes so we can neatly exit from Excel
+        /// App launch.
         /// </summary>
         public MainWindow()
         {
@@ -31,9 +30,6 @@ namespace FinanceAnalyser
             // If anything breaks in here, it causes a gross XAML crash. Need to move it out of MainWindow Constructor.
             dbConnection = DatabaseConnector.InitializeDatabase();
             MatchedCategories = DatabaseConnector.LoadSavedCategories(dbConnection);
-
-            // Hook to the application close event. No longer needed as we don't need to unhook from Excel anymore?
-            //Application.Current.MainWindow.Closing += new System.ComponentModel.CancelEventHandler(AppClosing);
         }
 
         /// <summary>
@@ -52,10 +48,8 @@ namespace FinanceAnalyser
             // Apply categories to descriptions which meet hardcoded rules
             List<Transaction> TransactionsTest = new List<Transaction>();
 
-
-            ListViewTransactions.ItemsSource = Transactions;
-
             //Make things visible!
+            ListViewTransactions.ItemsSource = Transactions;
             Phase1StackPanel.Visibility = Visibility.Collapsed;
             ListViewTransactions.Visibility = Visibility.Visible;
             Phase2StackPanel.Visibility = Visibility.Visible;
@@ -99,7 +93,10 @@ namespace FinanceAnalyser
             MessageBox.Show("How did you even click this? The button is disabled");
         }
 
-        private void Categorise()
+        /// <summary>
+        /// Loops through all of the transactions and adds categories if already known.
+        /// </summary>
+        private void CategoriseKnownTransactionDescriptions()
         {
             foreach (var transaction in Transactions)
             {
@@ -112,58 +109,59 @@ namespace FinanceAnalyser
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnCategorise_Click(object sender, RoutedEventArgs e)
         {
+            // Hide the previous phase
             ListViewTransactions.Visibility = Visibility.Collapsed;
             Phase2StackPanel.Visibility = Visibility.Collapsed;
 
-            // Applies pre-defined rules against transactions to apply categories where possible
+            // Applies pre-defined rules against transactions to apply categories where possible (Cashpoints, spotify, etc)
             List<Transaction> transactionsRuled = DefinedTransactionRules.ApplyDefinedTransactionRules(Transactions);
 
-            Categorise();
+            CategoriseKnownTransactionDescriptions();
 
+            // Show the category sorting page
             Phase4StackPanel.Visibility = Visibility.Visible;
 
-            AskForCategory();
+            MoveToNextTransaction();
         }
 
-        private void AskForCategory()
+        /// <summary>
+        /// Takes the first transaction in the list and displays it to the user to categorise
+        /// </summary>
+        private void MoveToNextTransaction()
         {
+            // Keep count of the number of unique transaction descriptions which don't have a category
             int remaining = Transactions.Where(t => string.IsNullOrEmpty(t.Category)).Select(t => t.Description).Distinct().Count();
 
+            // Get the first transaction. If null move to the next phase, else display the currentTranaction to the user
             currentTransaction = Transactions.FirstOrDefault(t => string.IsNullOrEmpty(t.Category));
             if (currentTransaction == null)
             {
-                //Phase 5                           
-                Phase4SubmitButton.IsEnabled = false;
-                Phase4SaveButton.Visibility = Visibility.Collapsed;
-                Phase5ListView.Visibility = Visibility.Visible;
-
-                Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
-
-
-                //// THIS IS WHERE WE WANT TO SPLIT CATEGORYTOTALS BY MONTH RATHER THAN JUST A LUMP SUM
-                var months = Transactions.GroupBy(t => t.Date.Month);
-
-                foreach (var category in MatchedCategories.Values.Distinct())
-                {
-                    //Totals the values associated with each category     
-                    categoryTotals.Add(category, Transactions.Where(t => t.Category == category).Sum(t => t.Amount));                    
-
-                }
-
-                Phase5ListView.ItemsSource = categoryTotals;
-                Phase5SaveButton.Visibility = Visibility.Visible;
-                return;
+                Phase5Start();
             }
-            Phase4Remaining.Text = "Unknown transactions remaining: " + remaining;
-            Phase4Date.Text = "Date: " + currentTransaction.Date;
-            Phase4Type.Text = "Type: " + currentTransaction.Type;
-            Phase4Description.Text = "Description: " + currentTransaction.Description;
-            Phase4Debit.Text = "Debit amount: " + currentTransaction.Debit.ToString();
-            Phase4Credit.Text = "Credit amount: " + currentTransaction.Credit.ToString();
+            else
+            {                
+                Phase4Remaining.Text = "Unknown transactions remaining: " + remaining;
+                Phase4Date.Text = "Date: " + currentTransaction.Date;
+                Phase4Type.Text = "Type: " + currentTransaction.Type;
+                Phase4Description.Text = "Description: " + currentTransaction.Description;
+                Phase4Debit.Text = "Debit amount: " + currentTransaction.Debit.ToString();
+                Phase4Credit.Text = "Credit amount: " + currentTransaction.Credit.ToString();
+            }
         }
-
+        
+        /// <summary>
+        /// Takes the category the user has entered and applies it to all transactions with the same description.
+        /// Add this new transaction description match to MatchedCategories and NewMatchedCategories so we know what to save to the database.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SubmitCategory_Click(object sender, RoutedEventArgs e)
         {
             string submittedCategory = CategoryInputBox.Text;
@@ -173,15 +171,17 @@ namespace FinanceAnalyser
             MatchedCategories.Add(currentDescription, submittedCategory);
             NewMatchedCategories.Add(currentDescription, submittedCategory);
 
+            // Enable the save button
             Phase4SaveButton.Content = "Save progress";
             Phase4SaveButton.IsEnabled = true;
 
-            Categorise();
-            AskForCategory();
+            //Move to the next transaction
+            CategoriseKnownTransactionDescriptions();
+            MoveToNextTransaction();
         }
 
         /// <summary>
-        /// Take MatchedCategories and save it in the database
+        /// Take NewMatchedCategories and save it to the database
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -194,22 +194,63 @@ namespace FinanceAnalyser
             Phase5SaveButton.IsEnabled = false;
         }
 
+        /// <summary>
+        /// Allows the user to save the categorising they have done so far and save it to the database
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Phase4SaveButton_Click(object sender, RoutedEventArgs e)
         {
+            // Save NewMatchedCategories to the database
             DatabaseConnector.SaveCategories(NewMatchedCategories, dbConnection);
+
+            // Empty NewMatchedCategories as they have been saved to the database.
             NewMatchedCategories.Clear();
 
+            // Disable the save button and tell the user it was successful.
             Phase4SaveButton.Content = "Successfully saved";
             Phase4SaveButton.IsEnabled = false;
         }
 
+        /// <summary>
+        /// User submitting a new category for a transaction description and used the 'Enter' key rather than clicking submit.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Phase4SubmitCategoryEnterKey(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == Key.Return)
             {
                 SubmitCategory_Click(sender, e);
                 CategoryInputBox.Clear();
-            }            
+            }
+        }
+
+        /// <summary>
+        /// Phase 5 
+        /// </summary>
+        private void Phase5Start()
+        {
+            Phase4SubmitButton.IsEnabled = false;
+            Phase4SaveButton.Visibility = Visibility.Collapsed;
+            Phase5ListView.Visibility = Visibility.Visible;
+
+            Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
+
+
+            //// THIS IS WHERE WE WANT TO SPLIT CATEGORYTOTALS BY MONTH RATHER THAN JUST A LUMP SUM
+            var months = Transactions.GroupBy(t => t.Date.Month);
+
+            foreach (var category in MatchedCategories.Values.Distinct())
+            {
+                //Totals the values associated with each category     
+                categoryTotals.Add(category, Transactions.Where(t => t.Category == category).Sum(t => t.Amount));
+
+            }
+
+            // Update the UI to show the results
+            Phase5ListView.ItemsSource = categoryTotals;
+            Phase5SaveButton.Visibility = Visibility.Visible;
         }
     }
 }

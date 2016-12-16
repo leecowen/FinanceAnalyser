@@ -2,6 +2,9 @@
 
 namespace FinanceAnalyser
 {
+    /// <summary>
+    /// Data for each transaction
+    /// </summary>
     public class Transaction
     {
         public DateTime Date { get; set; }

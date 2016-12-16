@@ -69,19 +69,5 @@ namespace FinanceAnalyser
                 return currentTransaction;
             });
         }
-
-        public static bool GetCSVCategories()
-        {
-
-
-            return false;
-        }
-
-        public static bool WriteCSVCategories()
-        {
-
-
-            return false;
-        }
     }
 }
