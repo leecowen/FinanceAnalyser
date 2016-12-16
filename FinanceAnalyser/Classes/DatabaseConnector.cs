@@ -47,10 +47,10 @@ namespace FinanceAnalyser.Classes
             return matchedCategories;
         }
 
-        public static void SaveCategories(Dictionary<string, string> matchedCategories, SQLiteConnection dbConnection)
+        public static void SaveCategories(Dictionary<string, string> newMatchedCategories, SQLiteConnection dbConnection)
         {
             // Add each matched category into the database
-            foreach(var category in matchedCategories)
+            foreach(var category in newMatchedCategories)
             {
                 string lineDesc = category.Key;
                 string lineCategory = category.Value;

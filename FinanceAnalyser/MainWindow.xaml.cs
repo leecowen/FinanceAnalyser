@@ -17,6 +17,7 @@ namespace FinanceAnalyser
         List<Transaction> Transactions = new List<Transaction>();
         // SERIALISE THIS SHIT
         Dictionary<string, string> MatchedCatagories = new Dictionary<string, string>();
+        Dictionary<string, string> NewMatchedCatagories = new Dictionary<string, string>();
         Transaction currentTransaction = null;
         SQLiteConnection dbConnection = new SQLiteConnection();
 
@@ -138,9 +139,9 @@ namespace FinanceAnalyser
                 //Phase 5                           
                 Phase4SubmitButton.IsEnabled = false;
                 Phase5ListView.Visibility = Visibility.Visible;
-                
+
                 Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
-                
+
                 foreach (var category in MatchedCatagories.Values.Distinct())
                 {
                     //Totals the values associated with each category     
@@ -164,12 +165,14 @@ namespace FinanceAnalyser
             string submittedCategory = CategoryInputBox.Text;
 
             string currentDescription = currentTransaction.Description;
-            MatchedCatagories.Add(currentDescription, submittedCategory);            
 
+            MatchedCatagories.Add(currentDescription, submittedCategory);
+            NewMatchedCatagories.Add(currentDescription, submittedCategory);
+            
             Categorise();
             AskForCategory();
         }
-        
+
         /// <summary>
         /// Take MatchedCategories and save it in the database
         /// </summary>
@@ -177,7 +180,7 @@ namespace FinanceAnalyser
         /// <param name="e"></param>
         private void Phase5SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            DatabaseConnector.SaveCategories(MatchedCatagories, dbConnection);
+            DatabaseConnector.SaveCategories(NewMatchedCatagories, dbConnection);
         }
     }
 }
