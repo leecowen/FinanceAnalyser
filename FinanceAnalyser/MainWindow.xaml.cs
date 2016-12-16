@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Data.SQLite;
+using System.Windows.Input;
 
 namespace FinanceAnalyser
 {
@@ -29,6 +30,7 @@ namespace FinanceAnalyser
             InitializeComponent();
 
             //Connect to sqlite database
+            // If anything breaks in here, it causes a gross XAML crash. Need to move it out of MainWindow Constructor.
             dbConnection = DatabaseConnector.InitializeDatabase();
             MatchedCategories = DatabaseConnector.LoadSavedCategories(dbConnection);
 
@@ -46,7 +48,13 @@ namespace FinanceAnalyser
             //Prompts the user to select the file containing data
             string filepath = this.GetFilepath();
 
+            // Pulls all transactions from the CSV file and formats
             Transactions = CSVProcessor.GetCSVTransactions(filepath).ToList();
+
+            // Apply categories to descriptions which meet hardcoded rules
+            List<Transaction> TransactionsTest = new List<Transaction>();
+
+
             ListViewTransactions.ItemsSource = Transactions;
 
             //Make things visible!
@@ -111,19 +119,11 @@ namespace FinanceAnalyser
             ListViewTransactions.Visibility = Visibility.Collapsed;
             Phase2StackPanel.Visibility = Visibility.Collapsed;
 
-            Phase3TextBlock.Visibility = Visibility.Visible;
+            // Applies pre-defined rules against transactions to apply categories where possible
+            List<Transaction> transactionsRuled = DefinedTransactionRules.ApplyDefinedTransactionRules(Transactions);
 
             Categorise();
 
-            Phase3TextBlock.Visibility = Visibility.Collapsed;
-            Phase3StackPanel.Visibility = Visibility.Visible;
-            //Phase3UnknownTransTotal.Text = "Total unique unrecognised transactions: " + Transactions.Where(t => string.IsNullOrEmpty(t.Category)).Select(t => t.Description).Distinct().Count() + ". Better start organising!";
-        }
-
-        private void btnOrganisingTime_Click(object sender, RoutedEventArgs e)
-        {
-            Phase3TextBlock.Visibility = Visibility.Collapsed;
-            Phase3StackPanel.Visibility = Visibility.Collapsed;
             Phase4StackPanel.Visibility = Visibility.Visible;
 
             AskForCategory();
@@ -131,14 +131,14 @@ namespace FinanceAnalyser
 
         private void AskForCategory()
         {
-            int remaining = Transactions.Distinct().Count(t => string.IsNullOrEmpty(t.Category));
-            int remaining2 = Transactions.Where(t => string.IsNullOrEmpty(t.Category)).Select(t => t.Description).Distinct().Count();
+            int remaining = Transactions.Where(t => string.IsNullOrEmpty(t.Category)).Select(t => t.Description).Distinct().Count();
 
             currentTransaction = Transactions.FirstOrDefault(t => string.IsNullOrEmpty(t.Category));
             if (currentTransaction == null)
             {
                 //Phase 5                           
                 Phase4SubmitButton.IsEnabled = false;
+                Phase4SaveButton.Visibility = Visibility.Collapsed;
                 Phase5ListView.Visibility = Visibility.Visible;
 
                 Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
@@ -153,7 +153,7 @@ namespace FinanceAnalyser
                 Phase5SaveButton.Visibility = Visibility.Visible;
                 return;
             }
-            Phase4Remaining.Text = "Unknown transactions remaining: " + remaining2;
+            Phase4Remaining.Text = "Unknown transactions remaining: " + remaining;
             Phase4Date.Text = "Date: " + currentTransaction.Date;
             Phase4Type.Text = "Type: " + currentTransaction.Type;
             Phase4Description.Text = "Description: " + currentTransaction.Description;
@@ -169,7 +169,10 @@ namespace FinanceAnalyser
 
             MatchedCategories.Add(currentDescription, submittedCategory);
             NewMatchedCategories.Add(currentDescription, submittedCategory);
-            
+
+            Phase4SaveButton.Content = "Save progress";
+            Phase4SaveButton.IsEnabled = true;
+
             Categorise();
             AskForCategory();
         }
@@ -182,11 +185,28 @@ namespace FinanceAnalyser
         private void Phase5SaveButton_Click(object sender, RoutedEventArgs e)
         {
             DatabaseConnector.SaveCategories(NewMatchedCategories, dbConnection);
+            NewMatchedCategories.Clear();
+
+            Phase5SaveButton.Content = "Successfully saved";
+            Phase5SaveButton.IsEnabled = false;
         }
 
         private void Phase4SaveButton_Click(object sender, RoutedEventArgs e)
         {
             DatabaseConnector.SaveCategories(NewMatchedCategories, dbConnection);
+            NewMatchedCategories.Clear();
+
+            Phase4SaveButton.Content = "Successfully saved";
+            Phase4SaveButton.IsEnabled = false;
+        }
+
+        private void Phase4SubmitCategoryEnterKey(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                SubmitCategory_Click(sender, e);
+                CategoryInputBox.Clear();
+            }            
         }
     }
 }

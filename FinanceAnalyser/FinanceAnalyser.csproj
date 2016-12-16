@@ -89,6 +89,7 @@
     </Compile>
     <Compile Include="Classes\CSVProcessor.cs" />
     <Compile Include="Classes\DatabaseConnector.cs" />
+    <Compile Include="Classes\DefinedTransactionRules.cs" />
     <Compile Include="Classes\Transaction.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
