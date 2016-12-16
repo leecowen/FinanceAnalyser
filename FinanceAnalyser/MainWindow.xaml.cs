@@ -25,7 +25,7 @@ namespace FinanceAnalyser
         public MainWindow()
         {
             InitializeComponent();
-            ConnectToDatabase();            
+            ConnectToDatabase();
         }
 
         /// <summary>
@@ -47,8 +47,10 @@ namespace FinanceAnalyser
             //Prompts the user to select the file containing data
             string filepath = OpenFilePicker.GetFilepath();
 
-            // Pulls all transactions from the CSV file and formats
-            Transactions = CSVProcessor.GetCSVTransactions(filepath).ToList();
+            //Pulls all transactions from the CSV file and formats
+            CSVProcessor csvProcessor = new CSVProcessor();
+            Transactions = csvProcessor.GetCSVTransactions(filepath).ToList();
+
 
             // Apply categories to descriptions which meet predefined rules
             List<Transaction> TransactionsTest = new List<Transaction>();
@@ -77,7 +79,7 @@ namespace FinanceAnalyser
         }
 
         /// <summary>
-        /// 
+        /// Applied catagories based upon predefined rules where possible to transactions, before showing the remaining unknown transactions to the user to categorise.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -113,7 +115,7 @@ namespace FinanceAnalyser
                 Phase5Start();
             }
             else
-            {                
+            {
                 Phase4Remaining.Text = "Unknown transactions remaining: " + remaining;
                 Phase4Date.Text = "Date: " + currentTransaction.Date;
                 Phase4Type.Text = "Type: " + currentTransaction.Type;
@@ -122,7 +124,7 @@ namespace FinanceAnalyser
                 Phase4Credit.Text = "Credit amount: " + currentTransaction.Credit.ToString();
             }
         }
-        
+
         /// <summary>
         /// Takes the category the user has entered and applies it to all transactions with the same description.
         /// Add this new transaction description match to MatchedCategories and NewMatchedCategories so we know what to save to the database.
@@ -177,7 +179,7 @@ namespace FinanceAnalyser
             // Disable the save button and tell the user it was successful.
             Phase4SaveButton.Content = "Successfully saved";
             Phase4SaveButton.IsEnabled = false;
-        }        
+        }
 
         /// <summary>
         /// Phase 5 
@@ -191,7 +193,7 @@ namespace FinanceAnalyser
 
             //// THIS IS WHERE WE WANT TO SPLIT CATEGORYTOTALS BY MONTH RATHER THAN JUST A LUMP SUM
 
-            Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();            
+            Dictionary<string, decimal> categoryTotals = new Dictionary<string, decimal>();
             var months = Transactions.GroupBy(t => t.Date.Month);
 
             // Sum the total amount for each category
@@ -199,7 +201,6 @@ namespace FinanceAnalyser
             {
                 //Totals the values associated with each category     
                 categoryTotals.Add(category, Transactions.Where(t => t.Category == category).Sum(t => t.Amount));
-
             }
 
             // Update the UI to show the results
